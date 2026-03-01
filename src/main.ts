@@ -1,12 +1,13 @@
 import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
-import { state } from "./state";
+import { state, loadState } from "./state";
 import { coordKey } from "./hex/hexUtils";
 import { initRenderer, renderAll } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
 import { updateCamera, onResize } from "./input/walkInput";
 import { setupToolbar } from "./ui/toolbar";
 import { setupColorPicker } from "./ui/colorPicker";
+import { setupKindPicker } from "./ui/kindPicker";
 
 async function main() {
   const app = new Application();
@@ -34,11 +35,15 @@ async function main() {
   world.addChild(layers.bridges);
   world.addChild(layers.ghosts);
   world.addChild(layers.tiles);
+  world.addChild(layers.kinds);
   world.addChild(layers.highlight);
   world.addChild(layers.character);
 
-  // Seed first tile at origin
-  state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0] });
+  // Load saved state or seed first tile
+  loadState();
+  if (state.tiles.size === 0) {
+    state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "plain" });
+  }
 
   // Initial render
   renderAll();
@@ -49,6 +54,7 @@ async function main() {
   // Setup UI
   setupToolbar();
   setupColorPicker();
+  setupKindPicker();
 
   // Game loop — just for camera follow in walk mode
   app.ticker.add(() => {

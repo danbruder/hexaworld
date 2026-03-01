@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { state } from "../state";
+import { state, saveState } from "../state";
 import { pixelToHex, coordKey, getGhostPositions } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
 
@@ -37,7 +37,8 @@ export function setupBuildInput(
     const ghosts = getGhostPositions();
     if (!ghosts.includes(key)) return;
 
-    state.tiles.set(key, { q, r, color: state.selectedColor });
+    state.tiles.set(key, { q, r, color: state.selectedColor, kind: state.selectedKind });
+    saveState();
     renderAll();
   });
 }

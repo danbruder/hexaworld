@@ -3,6 +3,7 @@ import { setupPanZoom } from "./panZoom";
 import { setupBuildInput } from "./buildInput";
 import { setupBridgeInput } from "./bridgeInput";
 import { setupWalkInput } from "./walkInput";
+import { setupDeleteInput } from "./deleteInput";
 
 export function setupInput(
   worldContainer: Container,
@@ -12,4 +13,5 @@ export function setupInput(
   setupBuildInput(worldContainer, canvas);
   setupBridgeInput(worldContainer, canvas);
   setupWalkInput(worldContainer, canvas);
+  setupDeleteInput(worldContainer, canvas);
 }

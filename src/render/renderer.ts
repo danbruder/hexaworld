@@ -1,16 +1,26 @@
-import { Graphics } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import { state } from "../state";
-import { getGhostPositions, parseKey } from "../hex/hexUtils";
+import { getGhostPositions, parseKey, hexToPixel } from "../hex/hexUtils";
 import { drawHex } from "./drawHex";
 import { drawGhost } from "./drawGhost";
 import { drawBridge } from "./drawBridge";
 import { drawCharacter } from "./drawCharacter";
+import { TILE_KINDS } from "../constants";
 
 let tileGraphics: Graphics;
 let ghostGraphics: Graphics;
 let bridgeGraphics: Graphics;
 let characterGraphics: Graphics;
 let highlightGraphics: Graphics;
+let kindContainer: Container;
+
+const kindIconStyle = new TextStyle({
+  fontSize: 24,
+  align: "center",
+});
+
+// Pool of text objects for kind icons
+const kindTexts: Text[] = [];
 
 export function initRenderer(): {
   tiles: Graphics;
@@ -18,12 +28,14 @@ export function initRenderer(): {
   bridges: Graphics;
   character: Graphics;
   highlight: Graphics;
+  kinds: Container;
 } {
   tileGraphics = new Graphics();
   ghostGraphics = new Graphics();
   bridgeGraphics = new Graphics();
   characterGraphics = new Graphics();
   highlightGraphics = new Graphics();
+  kindContainer = new Container();
 
   return {
     tiles: tileGraphics,
@@ -31,6 +43,7 @@ export function initRenderer(): {
     bridges: bridgeGraphics,
     character: characterGraphics,
     highlight: highlightGraphics,
+    kinds: kindContainer,
   };
 }
 
@@ -38,7 +51,42 @@ export function renderAll(): void {
   // Tiles
   tileGraphics.clear();
   for (const [, tile] of state.tiles) {
-    drawHex(tileGraphics, tile.q, tile.r, tile.color);
+    const kind = tile.kind || "plain";
+    const kindDef = kind !== "plain" ? TILE_KINDS.find((k) => k.id === kind) : null;
+    const color = kindDef?.color ?? tile.color;
+    drawHex(tileGraphics, tile.q, tile.r, color);
+  }
+
+  // Kind icons
+  // Hide all existing texts
+  for (const t of kindTexts) {
+    t.visible = false;
+  }
+  let textIdx = 0;
+  for (const [, tile] of state.tiles) {
+    const kind = tile.kind || "plain";
+    if (kind === "plain") continue;
+
+    const kindDef = TILE_KINDS.find((k) => k.id === kind);
+    if (!kindDef || !kindDef.icon) continue;
+
+    const center = hexToPixel(tile.q, tile.r);
+
+    // Reuse or create text
+    let text: Text;
+    if (textIdx < kindTexts.length) {
+      text = kindTexts[textIdx];
+      text.visible = true;
+    } else {
+      text = new Text({ text: "", style: kindIconStyle });
+      text.anchor.set(0.5);
+      kindContainer.addChild(text);
+      kindTexts.push(text);
+    }
+    text.text = kindDef.icon;
+    text.x = center.x;
+    text.y = center.y;
+    textIdx++;
   }
 
   // Ghosts (only in build mode)

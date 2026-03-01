@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { state } from "../state";
+import { state, saveState } from "../state";
 import { pixelToHex, coordKey, parseKey, hexLineBetween } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
 import { BRIDGE_COLOR } from "../constants";
@@ -65,6 +65,7 @@ export function setupBridgeInput(
             toKey: key,
             color: BRIDGE_COLOR,
           });
+          saveState();
         }
       }
       state.bridgeStart = null;

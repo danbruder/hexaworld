@@ -1,7 +1,10 @@
+export type TileKind = "plain" | "grass" | "wood" | "snow" | "fire";
+
 export interface TileData {
   q: number;
   r: number;
   color: number;
+  kind: TileKind;
 }
 
 export interface BridgeData {
@@ -10,13 +13,14 @@ export interface BridgeData {
   color: number;
 }
 
-export type Mode = "build" | "bridge" | "walk";
+export type Mode = "build" | "bridge" | "walk" | "delete";
 
 export interface GameState {
   tiles: Map<string, TileData>;
   bridges: BridgeData[];
   mode: Mode;
   selectedColor: number;
+  selectedKind: TileKind;
   characterPos: { q: number; r: number } | null;
   bridgeStart: string | null;
 }
