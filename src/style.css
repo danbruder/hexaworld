@@ -86,7 +86,6 @@ body {
 
 #kind-picker {
   position: fixed;
-  top: 56px;
   left: 0;
   bottom: 0;
   z-index: 10;
@@ -94,13 +93,13 @@ body {
   flex-direction: column;
   background: rgba(0, 0, 0, 0.75);
   width: 140px;
-  transition: max-height 0.25s ease;
+  max-height: calc(100vh - 56px);
+  transition: max-height 0.3s ease;
+  overflow: hidden;
 }
 
 #kind-picker.collapsed {
-  top: auto;
-  bottom: 0;
-  max-height: 310px;
+  max-height: 300px;
 }
 
 #kind-picker .kind-toggle {
