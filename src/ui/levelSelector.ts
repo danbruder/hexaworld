@@ -2,39 +2,7 @@ import { state, getLevels, switchLevel, createLevel, deleteLevel, renameLevel, s
 import { renderAll } from "../render/renderer";
 import { COLORS } from "../constants";
 import { coordKey } from "../hex/hexUtils";
-
-function showCelebration(levelName: string): void {
-  const overlay = document.createElement("div");
-  overlay.className = "celebration-overlay";
-
-  overlay.innerHTML = `
-    <div class="celebration-content">
-      <div class="celebration-stars">&#10024;</div>
-      <div class="celebration-title">Level Complete!</div>
-      <div class="celebration-level">${levelName}</div>
-      <div class="celebration-stars">&#127881; &#127775; &#127881;</div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  // Trigger animation on next frame
-  requestAnimationFrame(() => overlay.classList.add("show"));
-
-  // Auto-dismiss after 3 seconds
-  setTimeout(() => {
-    overlay.classList.remove("show");
-    overlay.classList.add("hide");
-    setTimeout(() => overlay.remove(), 500);
-  }, 3000);
-
-  // Click to dismiss early
-  overlay.addEventListener("click", () => {
-    overlay.classList.remove("show");
-    overlay.classList.add("hide");
-    setTimeout(() => overlay.remove(), 500);
-  });
-}
+import { showOverlay } from "./overlay";
 
 export function setupLevelSelector(): void {
   const container = document.getElementById("level-selector")!;
@@ -144,7 +112,13 @@ export function setupLevelSelector(): void {
 
   // Listen for level completions
   onLevelComplete((_id, name) => {
-    showCelebration(name);
+    showOverlay({
+      className: "overlay-win",
+      title: "Level Complete!",
+      subtitle: name,
+      topDecor: "&#10024;",
+      bottomDecor: "&#127881; &#127775; &#127881;",
+    });
     render();
   });
 

@@ -144,6 +144,6 @@ export function renderAll(): void {
 /** Call each frame to animate the idle bob */
 export function updateCharacterBob(): void {
   if (!characterContainer.visible) return;
-  const bob = Math.sin(Date.now() / 800) * 3;
+  const bob = Math.sin(Date.now() / 400) * 3;
   characterText.y = characterBaseY + bob;
 }

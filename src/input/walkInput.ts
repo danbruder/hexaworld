@@ -3,6 +3,7 @@ import { state, completeLevel } from "../state";
 import { coordKey, getNeighborKeys, parseKey } from "../hex/hexUtils";
 import { hexToPixel } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
+import { showOverlay } from "../ui/overlay";
 
 let worldContainer: Container;
 let canvasWidth = 0;
@@ -92,10 +93,21 @@ export function setupWalkInput(
       state.characterPos = { q: pos.q, r: pos.r };
       renderAll();
 
-      // Check if we stepped on a flag tile
+      // Check tile effects
       const tile = state.tiles.get(bestKey);
       if (tile && tile.kind === "flag") {
         completeLevel(state.currentLevel);
+      } else if (tile && tile.kind === "skull") {
+        showOverlay({
+          className: "overlay-death",
+          title: "You Died!",
+          topDecor: "&#128128;",
+          bottomDecor: "&#128128; &#128128; &#128128;",
+          duration: 2000,
+        });
+        // Respawn at seed tile (0,0)
+        state.characterPos = { q: 0, r: 0 };
+        renderAll();
       }
     }
   });
