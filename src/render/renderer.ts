@@ -23,9 +23,11 @@ const kindIconStyle = new TextStyle({
 const kindTexts: Text[] = [];
 
 const characterStyle = new TextStyle({
-  fontSize: 28,
+  fontSize: 36,
   align: "center",
 });
+
+let characterBaseY = 0;
 
 export function initRenderer(): {
   tiles: Graphics;
@@ -131,9 +133,17 @@ export function renderAll(): void {
     const center = hexToPixel(state.characterPos.q, state.characterPos.r);
     characterText.text = charDef?.icon ?? PLAYER_CHARACTERS[0].icon;
     characterText.x = center.x;
-    characterText.y = center.y;
+    characterBaseY = center.y;
+    characterText.y = characterBaseY;
     characterContainer.visible = true;
   } else {
     characterContainer.visible = false;
   }
+}
+
+/** Call each frame to animate the idle bob */
+export function updateCharacterBob(): void {
+  if (!characterContainer.visible) return;
+  const bob = Math.sin(Date.now() / 800) * 3;
+  characterText.y = characterBaseY + bob;
 }

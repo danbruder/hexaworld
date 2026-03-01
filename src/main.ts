@@ -2,7 +2,7 @@ import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
 import { state, loadState, loadPrefs, migrateOldSave } from "./state";
 import { coordKey } from "./hex/hexUtils";
-import { initRenderer, renderAll } from "./render/renderer";
+import { initRenderer, renderAll, updateCharacterBob } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
 import { updateCamera, onResize } from "./input/walkInput";
 import { setupToolbar } from "./ui/toolbar";
@@ -61,6 +61,7 @@ async function main() {
   // Game loop — just for camera follow in walk mode
   app.ticker.add(() => {
     updateCamera();
+    updateCharacterBob();
   });
 
   // Handle resize
