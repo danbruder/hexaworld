@@ -132,6 +132,8 @@ export function switchLevel(id: string): void {
 export function createLevel(): string {
   const levels = getLevels();
   const nextId = String(Math.max(...levels.map((l) => Number(l.id) || 0)) + 1);
+  // Clear any leftover data from a previously deleted level with this ID
+  localStorage.removeItem(levelStorageKey(nextId));
   levels.push({ id: nextId, name: `Level ${nextId}` });
   saveLevels(levels);
   switchLevel(nextId);
