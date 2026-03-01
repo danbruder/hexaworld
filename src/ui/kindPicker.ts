@@ -1,10 +1,15 @@
 import { state } from "../state";
 import { TILE_KINDS } from "../constants";
 
+function colorToCSS(color: number | null): string {
+  if (color === null) return "rgba(255,255,255,0.1)";
+  return `#${color.toString(16).padStart(6, "0")}`;
+}
+
 export function setupKindPicker(): void {
   const container = document.getElementById("kind-picker")!;
 
-  // Scrollable list
+  // Scrollable grid
   const list = document.createElement("div");
   list.className = "kind-list";
   container.appendChild(list);
@@ -20,11 +25,8 @@ export function setupKindPicker(): void {
   for (const kind of TILE_KINDS) {
     const btn = document.createElement("button");
     btn.className = "kind-btn";
-    if (kind.icon) {
-      btn.innerHTML = `<span class="kind-icon">${kind.icon}</span><span class="kind-label">${kind.label}</span>`;
-    } else {
-      btn.innerHTML = `<span class="kind-label">${kind.label}</span>`;
-    }
+    btn.style.backgroundColor = colorToCSS(kind.color);
+    btn.innerHTML = `<span class="kind-icon">${kind.icon || "\u{2B1C}"}</span><span class="kind-label">${kind.label}</span>`;
     btn.title = kind.label;
     btn.addEventListener("click", () => {
       state.selectedKind = kind.id;
