@@ -51,8 +51,8 @@ export function renderAll(): void {
   // Tiles
   tileGraphics.clear();
   for (const [, tile] of state.tiles) {
-    const kind = tile.kind || "plain";
-    const kindDef = kind !== "plain" ? TILE_KINDS.find((k) => k.id === kind) : null;
+    const kind = tile.kind || "color";
+    const kindDef = kind !== "color" ? TILE_KINDS.find((k) => k.id === kind) : null;
     const color = kindDef?.color ?? tile.color;
     drawHex(tileGraphics, tile.q, tile.r, color);
   }
@@ -64,8 +64,8 @@ export function renderAll(): void {
   }
   let textIdx = 0;
   for (const [, tile] of state.tiles) {
-    const kind = tile.kind || "plain";
-    if (kind === "plain") continue;
+    const kind = tile.kind || "color";
+    if (kind === "color") continue;
 
     const kindDef = TILE_KINDS.find((k) => k.id === kind);
     if (!kindDef || !kindDef.icon) continue;

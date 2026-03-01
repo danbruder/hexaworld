@@ -23,4 +23,5 @@ export interface GameState {
   selectedKind: TileKind;
   characterPos: { q: number; r: number } | null;
   bridgeStart: string | null;
+  currentLevel: string;
 }

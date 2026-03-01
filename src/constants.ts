@@ -21,9 +21,11 @@ export const BRIDGE_COLOR = 0x8b7355;
 export const GHOST_COLOR = 0x555577;
 export const CHARACTER_COLOR = 0xffffff;
 
+export const COLOR_NAMES = ["Green", "Blue", "Sand", "Brown", "Red", "Purple", "Orange", "Gray"];
+
 export const TILE_KINDS = [
-  // Basic
-  { id: "plain", label: "Plain", icon: "", color: null },
+  // Color tile (uses selectedColor)
+  { id: "color", label: "Color", icon: "", color: null },
   { id: "grass", label: "Grass", icon: "\u{1F33F}", color: 0x2d5a1e },
   { id: "wood", label: "Wood", icon: "\u{1FAB5}", color: 0x5c3a1e },
   { id: "snow", label: "Snow", icon: "\u{2744}\u{FE0F}", color: 0xc8dce8 },

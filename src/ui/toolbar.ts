@@ -51,7 +51,7 @@ export function setupToolbar(): void {
     if (!confirm("Clear everything and start over?")) return;
     clearState();
     // Re-seed
-    state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "plain" });
+    state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "color" });
     saveState();
     renderAll();
   });

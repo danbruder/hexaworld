@@ -1,13 +1,13 @@
 import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
-import { state, loadState, loadPrefs } from "./state";
+import { state, loadState, loadPrefs, migrateOldSave } from "./state";
 import { coordKey } from "./hex/hexUtils";
 import { initRenderer, renderAll } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
 import { updateCamera, onResize } from "./input/walkInput";
 import { setupToolbar } from "./ui/toolbar";
-import { setupColorPicker } from "./ui/colorPicker";
 import { setupKindPicker } from "./ui/kindPicker";
+import { setupLevelSelector } from "./ui/levelSelector";
 
 async function main() {
   const app = new Application();
@@ -39,11 +39,12 @@ async function main() {
   world.addChild(layers.highlight);
   world.addChild(layers.character);
 
-  // Load saved state and preferences
-  loadState();
+  // Migrate old single-save format, then load preferences and level
+  migrateOldSave();
   loadPrefs();
+  loadState();
   if (state.tiles.size === 0) {
-    state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "plain" });
+    state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "color" });
   }
 
   // Initial render
@@ -54,7 +55,7 @@ async function main() {
 
   // Setup UI
   setupToolbar();
-  setupColorPicker();
+  setupLevelSelector();
   setupKindPicker();
 
   // Game loop — just for camera follow in walk mode
