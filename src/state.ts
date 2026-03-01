@@ -2,6 +2,7 @@ import { COLORS } from "./constants";
 import { GameState, TileData, BridgeData } from "./types";
 
 const STORAGE_KEY = "hexaworld-save";
+const PREFS_KEY = "hexaworld-prefs";
 
 export const state: GameState = {
   tiles: new Map(),
@@ -35,6 +36,25 @@ export function loadState(): void {
     state.bridges = data.bridges as BridgeData[];
   } catch {
     // Ignore corrupt saves
+  }
+}
+
+export function savePrefs(): void {
+  localStorage.setItem(PREFS_KEY, JSON.stringify({
+    selectedColor: state.selectedColor,
+    selectedKind: state.selectedKind,
+  }));
+}
+
+export function loadPrefs(): void {
+  const raw = localStorage.getItem(PREFS_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    if (typeof data.selectedColor === "number") state.selectedColor = data.selectedColor;
+    if (typeof data.selectedKind === "string") state.selectedKind = data.selectedKind;
+  } catch {
+    // Ignore
   }
 }
 

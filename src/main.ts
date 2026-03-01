@@ -1,6 +1,6 @@
 import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
-import { state, loadState } from "./state";
+import { state, loadState, loadPrefs } from "./state";
 import { coordKey } from "./hex/hexUtils";
 import { initRenderer, renderAll } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
@@ -39,8 +39,9 @@ async function main() {
   world.addChild(layers.highlight);
   world.addChild(layers.character);
 
-  // Load saved state or seed first tile
+  // Load saved state and preferences
   loadState();
+  loadPrefs();
   if (state.tiles.size === 0) {
     state.tiles.set(coordKey(0, 0), { q: 0, r: 0, color: COLORS[0], kind: "plain" });
   }

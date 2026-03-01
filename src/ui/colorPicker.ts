@@ -1,4 +1,4 @@
-import { state } from "../state";
+import { state, savePrefs } from "../state";
 import { COLORS } from "../constants";
 
 export function setupColorPicker(): void {
@@ -13,6 +13,7 @@ export function setupColorPicker(): void {
 
     swatch.addEventListener("click", () => {
       state.selectedColor = color;
+      savePrefs();
       updateActive();
     });
 

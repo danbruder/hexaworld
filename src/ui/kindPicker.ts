@@ -1,4 +1,4 @@
-import { state } from "../state";
+import { state, savePrefs } from "../state";
 import { TILE_KINDS } from "../constants";
 
 function colorToCSS(color: number | null): string {
@@ -30,6 +30,7 @@ export function setupKindPicker(): void {
     btn.title = kind.label;
     btn.addEventListener("click", () => {
       state.selectedKind = kind.id;
+      savePrefs();
       updateActive();
     });
     buttons.push(btn);

@@ -2,74 +2,109 @@ import { Container } from "pixi.js";
 import { state, saveState } from "../state";
 import { pixelToHex, coordKey, hexToPixel } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
+import { blockPan } from "./panZoom";
 
 export function setupDeleteInput(
   worldContainer: Container,
   canvas: HTMLCanvasElement
 ): void {
-  let downX = 0;
-  let downY = 0;
+  let erasing = false;
+  let deleted = false;
 
-  canvas.addEventListener("pointerdown", (e) => {
-    downX = e.clientX;
-    downY = e.clientY;
-  });
-
-  canvas.addEventListener("pointerup", (e) => {
-    if (state.mode !== "delete") return;
-
-    // Ignore drags
-    const dx = e.clientX - downX;
-    const dy = e.clientY - downY;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) return;
-
+  function screenToWorld(clientX: number, clientY: number) {
     const rect = canvas.getBoundingClientRect();
-    const screenX = e.clientX - rect.left;
-    const screenY = e.clientY - rect.top;
-    const worldX = (screenX - worldContainer.x) / worldContainer.scale.x;
-    const worldY = (screenY - worldContainer.y) / worldContainer.scale.y;
+    const screenX = clientX - rect.left;
+    const screenY = clientY - rect.top;
+    return {
+      x: (screenX - worldContainer.x) / worldContainer.scale.x,
+      y: (screenY - worldContainer.y) / worldContainer.scale.y,
+    };
+  }
 
-    const { q, r } = pixelToHex(worldX, worldY);
+  function tryDeleteAt(clientX: number, clientY: number): boolean {
+    const world = screenToWorld(clientX, clientY);
+    const { q, r } = pixelToHex(world.x, world.y);
     const key = coordKey(q, r);
 
-    // Try deleting a tile (but don't delete the last one)
+    // Try deleting a tile (but not the last one)
     if (state.tiles.has(key) && state.tiles.size > 1) {
       state.tiles.delete(key);
-      // Also remove any bridges connected to this tile
       state.bridges = state.bridges.filter(
         (b) => b.fromKey !== key && b.toKey !== key
       );
-      // Clear character if it was on this tile
       if (state.characterPos && coordKey(state.characterPos.q, state.characterPos.r) === key) {
         state.characterPos = null;
       }
-      saveState();
-      renderAll();
-      return;
+      return true;
     }
 
-    // Try deleting a bridge (find the closest bridge to click point)
-    let closestIdx = -1;
-    let closestDist = 20; // max click distance in world units
-    for (let i = 0; i < state.bridges.length; i++) {
-      const b = state.bridges[i];
-      const from = state.tiles.get(b.fromKey);
-      const to = state.tiles.get(b.toKey);
-      if (!from || !to) continue;
-      const fp = hexToPixel(from.q, from.r);
-      const tp = hexToPixel(to.q, to.r);
-      const dist = pointToSegmentDist(worldX, worldY, fp.x, fp.y, tp.x, tp.y);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestIdx = i;
+    // Try deleting a bridge (only on initial click, not drag)
+    if (!erasing) {
+      let closestIdx = -1;
+      let closestDist = 20;
+      for (let i = 0; i < state.bridges.length; i++) {
+        const b = state.bridges[i];
+        const from = state.tiles.get(b.fromKey);
+        const to = state.tiles.get(b.toKey);
+        if (!from || !to) continue;
+        const fp = hexToPixel(from.q, from.r);
+        const tp = hexToPixel(to.q, to.r);
+        const dist = pointToSegmentDist(world.x, world.y, fp.x, fp.y, tp.x, tp.y);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
+        }
+      }
+      if (closestIdx >= 0) {
+        state.bridges.splice(closestIdx, 1);
+        return true;
       }
     }
 
-    if (closestIdx >= 0) {
-      state.bridges.splice(closestIdx, 1);
-      saveState();
+    return false;
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (state.mode !== "delete" || e.button !== 0) return;
+
+    const world = screenToWorld(e.clientX, e.clientY);
+    const { q, r } = pixelToHex(world.x, world.y);
+    const key = coordKey(q, r);
+
+    // Start erasing if clicking on a tile
+    if (state.tiles.has(key)) {
+      erasing = true;
+      blockPan();
+      deleted = tryDeleteAt(e.clientX, e.clientY);
+      if (deleted) renderAll();
+    } else {
+      // Try bridge delete on click (non-drag)
+      // handled in pointerup for single clicks
+    }
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    if (!erasing || state.mode !== "delete") return;
+
+    if (tryDeleteAt(e.clientX, e.clientY)) {
+      deleted = true;
       renderAll();
     }
+  });
+
+  window.addEventListener("pointerup", (e) => {
+    if (state.mode === "delete" && !erasing) {
+      // Single click — try bridge delete
+      if (tryDeleteAt(e.clientX, e.clientY)) {
+        saveState();
+        renderAll();
+      }
+    }
+    if (erasing && deleted) {
+      saveState();
+    }
+    erasing = false;
+    deleted = false;
   });
 }
 
