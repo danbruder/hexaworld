@@ -2,43 +2,67 @@ import { Container } from "pixi.js";
 import { state, saveState } from "../state";
 import { pixelToHex, coordKey, getGhostPositions } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
+import { blockPan } from "./panZoom";
 
 export function setupBuildInput(
   worldContainer: Container,
   canvas: HTMLCanvasElement
 ): void {
-  let downX = 0;
-  let downY = 0;
+  let painting = false;
+  let placed = false;
 
-  canvas.addEventListener("pointerdown", (e) => {
-    downX = e.clientX;
-    downY = e.clientY;
-  });
-
-  canvas.addEventListener("pointerup", (e) => {
-    if (state.mode !== "build") return;
-
-    // Ignore if it was a drag (pan)
-    const dx = e.clientX - downX;
-    const dy = e.clientY - downY;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) return;
-
-    // Convert screen → world → hex
+  function screenToHexKey(clientX: number, clientY: number): string | null {
     const rect = canvas.getBoundingClientRect();
-    const screenX = e.clientX - rect.left;
-    const screenY = e.clientY - rect.top;
+    const screenX = clientX - rect.left;
+    const screenY = clientY - rect.top;
     const worldX = (screenX - worldContainer.x) / worldContainer.scale.x;
     const worldY = (screenY - worldContainer.y) / worldContainer.scale.y;
-
     const { q, r } = pixelToHex(worldX, worldY);
-    const key = coordKey(q, r);
+    return coordKey(q, r);
+  }
 
-    // Only place on ghost positions
+  function tryPlace(key: string): boolean {
+    if (state.tiles.has(key)) return false;
     const ghosts = getGhostPositions();
-    if (!ghosts.includes(key)) return;
-
+    if (!ghosts.includes(key)) return false;
+    const [q, r] = key.split(",").map(Number);
     state.tiles.set(key, { q, r, color: state.selectedColor, kind: state.selectedKind });
-    saveState();
-    renderAll();
+    return true;
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (state.mode !== "build" || e.button !== 0) return;
+
+    const key = screenToHexKey(e.clientX, e.clientY);
+    if (!key) return;
+
+    // Check if we're clicking on a ghost — if so, start painting
+    const ghosts = getGhostPositions();
+    if (ghosts.includes(key)) {
+      painting = true;
+      blockPan();
+      placed = tryPlace(key);
+      if (placed) renderAll();
+    }
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    if (!painting || state.mode !== "build") return;
+
+    const key = screenToHexKey(e.clientX, e.clientY);
+    if (!key) return;
+
+    if (tryPlace(key)) {
+      placed = true;
+      renderAll();
+    }
+  });
+
+  window.addEventListener("pointerup", () => {
+    if (painting && placed) {
+      saveState();
+    }
+    painting = false;
+    placed = false;
   });
 }

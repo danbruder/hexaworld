@@ -1,6 +1,13 @@
 import { Container } from "pixi.js";
 import { ZOOM_MIN, ZOOM_MAX, ZOOM_SPEED } from "../constants";
 
+let panBlocked = false;
+
+/** Call to prevent panning for the current gesture */
+export function blockPan(): void {
+  panBlocked = true;
+}
+
 export function setupPanZoom(
   worldContainer: Container,
   canvas: HTMLCanvasElement
@@ -10,12 +17,15 @@ export function setupPanZoom(
   let lastY = 0;
 
   canvas.addEventListener("pointerdown", (e) => {
-    // Only pan on left-click (button 0)
     if (e.button !== 0) return;
-    isPanning = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    canvas.style.cursor = "grabbing";
+    // Defer pan start to next frame so build input can call blockPan() first
+    requestAnimationFrame(() => {
+      if (panBlocked) return;
+      isPanning = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.style.cursor = "grabbing";
+    });
   });
 
   window.addEventListener("pointermove", (e) => {
@@ -30,6 +40,7 @@ export function setupPanZoom(
 
   window.addEventListener("pointerup", () => {
     isPanning = false;
+    panBlocked = false;
     canvas.style.cursor = "default";
   });
 
@@ -40,7 +51,6 @@ export function setupPanZoom(
     const delta = -e.deltaY * ZOOM_SPEED;
     const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, oldScale + delta * oldScale));
 
-    // Zoom toward cursor position
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -52,7 +62,4 @@ export function setupPanZoom(
     worldContainer.x = mouseX - worldX * newScale;
     worldContainer.y = mouseY - worldY * newScale;
   }, { passive: false });
-
-  // Expose panning state for build/bridge input to check
-  (canvas as any).__isPanning = () => isPanning;
 }
