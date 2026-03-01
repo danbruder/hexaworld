@@ -86,27 +86,69 @@ body {
 
 #kind-picker {
   position: fixed;
-  bottom: 16px;
-  left: 16px;
+  top: 56px;
+  left: 0;
+  bottom: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  width: 140px;
+  transition: max-height 0.25s ease;
+}
+
+#kind-picker.collapsed {
+  top: auto;
+  bottom: 0;
+  max-height: 310px;
+}
+
+#kind-picker .kind-toggle {
+  flex-shrink: 0;
+  padding: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  cursor: pointer;
+  font-size: 10px;
+  text-align: center;
+}
+
+#kind-picker .kind-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+#kind-picker .kind-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   padding: 6px;
 }
 
 #kind-picker .kind-btn {
-  padding: 6px 12px;
+  padding: 5px 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: #aaa;
   font-size: 13px;
   cursor: pointer;
   text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
   transition: background 0.15s, color 0.15s;
+}
+
+#kind-picker .kind-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
 }
 
 #kind-picker .kind-btn:hover {

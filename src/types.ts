@@ -1,4 +1,4 @@
-export type TileKind = "plain" | "grass" | "wood" | "snow" | "fire";
+export type TileKind = string;
 
 export interface TileData {
   q: number;
