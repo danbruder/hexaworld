@@ -21,6 +21,25 @@ export const BRIDGE_COLOR = 0x8b7355;
 export const GHOST_COLOR = 0x555577;
 export const CHARACTER_COLOR = 0xffffff;
 
+export const PLAYER_CHARACTERS = [
+  { id: "person", label: "Person", icon: "\u{1F9D1}" },
+  { id: "woman", label: "Woman", icon: "\u{1F469}" },
+  { id: "man", label: "Man", icon: "\u{1F468}" },
+  { id: "ninja", label: "Ninja", icon: "\u{1F977}" },
+  { id: "astronaut", label: "Astronaut", icon: "\u{1F9D1}\u{200D}\u{1F680}" },
+  { id: "racecar", label: "Race Car", icon: "\u{1F3CE}\u{FE0F}" },
+  { id: "fox", label: "Fox", icon: "\u{1F98A}" },
+  { id: "elephant", label: "Elephant", icon: "\u{1F418}" },
+  { id: "cat", label: "Cat", icon: "\u{1F431}" },
+  { id: "dog", label: "Dog", icon: "\u{1F436}" },
+  { id: "unicorn", label: "Unicorn", icon: "\u{1F984}" },
+  { id: "dragon", label: "Dragon", icon: "\u{1F409}" },
+  { id: "alien", label: "Alien", icon: "\u{1F47D}" },
+  { id: "robot", label: "Robot", icon: "\u{1F916}" },
+  { id: "ghost", label: "Ghost", icon: "\u{1F47B}" },
+  { id: "eagle", label: "Eagle", icon: "\u{1F985}" },
+];
+
 export const COLOR_NAMES = ["Green", "Blue", "Sand", "Brown", "Red", "Purple", "Orange", "Gray"];
 
 export const TILE_KINDS = [

@@ -41,6 +41,7 @@ export const state: GameState = {
   characterPos: null,
   bridgeStart: null,
   currentLevel: "1",
+  selectedCharacter: "robot",
 };
 
 export function getLevels(): LevelEntry[] {
@@ -86,6 +87,7 @@ export function savePrefs(): void {
     selectedColor: state.selectedColor,
     selectedKind: state.selectedKind,
     currentLevel: state.currentLevel,
+    selectedCharacter: state.selectedCharacter,
   }));
 }
 
@@ -97,6 +99,7 @@ export function loadPrefs(): void {
     if (typeof data.selectedColor === "number") state.selectedColor = data.selectedColor;
     if (typeof data.selectedKind === "string") state.selectedKind = data.selectedKind;
     if (typeof data.currentLevel === "string") state.currentLevel = data.currentLevel;
+    if (typeof data.selectedCharacter === "string") state.selectedCharacter = data.selectedCharacter;
   } catch {
     // Ignore
   }

@@ -24,4 +24,5 @@ export interface GameState {
   characterPos: { q: number; r: number } | null;
   bridgeStart: string | null;
   currentLevel: string;
+  selectedCharacter: string;
 }

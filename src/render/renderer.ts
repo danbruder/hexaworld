@@ -4,13 +4,13 @@ import { getGhostPositions, parseKey, hexToPixel } from "../hex/hexUtils";
 import { drawHex } from "./drawHex";
 import { drawGhost } from "./drawGhost";
 import { drawBridge } from "./drawBridge";
-import { drawCharacter } from "./drawCharacter";
-import { TILE_KINDS } from "../constants";
+import { TILE_KINDS, PLAYER_CHARACTERS } from "../constants";
 
 let tileGraphics: Graphics;
 let ghostGraphics: Graphics;
 let bridgeGraphics: Graphics;
-let characterGraphics: Graphics;
+let characterContainer: Container;
+let characterText: Text;
 let highlightGraphics: Graphics;
 let kindContainer: Container;
 
@@ -22,18 +22,26 @@ const kindIconStyle = new TextStyle({
 // Pool of text objects for kind icons
 const kindTexts: Text[] = [];
 
+const characterStyle = new TextStyle({
+  fontSize: 28,
+  align: "center",
+});
+
 export function initRenderer(): {
   tiles: Graphics;
   ghosts: Graphics;
   bridges: Graphics;
-  character: Graphics;
+  character: Container;
   highlight: Graphics;
   kinds: Container;
 } {
   tileGraphics = new Graphics();
   ghostGraphics = new Graphics();
   bridgeGraphics = new Graphics();
-  characterGraphics = new Graphics();
+  characterContainer = new Container();
+  characterText = new Text({ text: "", style: characterStyle });
+  characterText.anchor.set(0.5);
+  characterContainer.addChild(characterText);
   highlightGraphics = new Graphics();
   kindContainer = new Container();
 
@@ -41,7 +49,7 @@ export function initRenderer(): {
     tiles: tileGraphics,
     ghosts: ghostGraphics,
     bridges: bridgeGraphics,
-    character: characterGraphics,
+    character: characterContainer,
     highlight: highlightGraphics,
     kinds: kindContainer,
   };
@@ -118,8 +126,14 @@ export function renderAll(): void {
   }
 
   // Character
-  characterGraphics.clear();
   if (state.characterPos) {
-    drawCharacter(characterGraphics, state.characterPos.q, state.characterPos.r);
+    const charDef = PLAYER_CHARACTERS.find((c) => c.id === state.selectedCharacter);
+    const center = hexToPixel(state.characterPos.q, state.characterPos.r);
+    characterText.text = charDef?.icon ?? PLAYER_CHARACTERS[0].icon;
+    characterText.x = center.x;
+    characterText.y = center.y;
+    characterContainer.visible = true;
+  } else {
+    characterContainer.visible = false;
   }
 }

@@ -53,6 +53,17 @@ body {
   color: #fff;
 }
 
+.toolbar-sep {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 4px 2px;
+}
+
+.toolbar-sub {
+  display: flex;
+  gap: 4px;
+}
+
 #kind-picker {
   position: fixed;
   right: 0;
