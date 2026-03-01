@@ -11,6 +11,25 @@ function levelStorageKey(id: string): string {
 export interface LevelEntry {
   id: string;
   name: string;
+  completed?: boolean;
+}
+
+// Listeners for level completion events
+type CompletionListener = (levelId: string, levelName: string) => void;
+const completionListeners: CompletionListener[] = [];
+
+export function onLevelComplete(fn: CompletionListener): void {
+  completionListeners.push(fn);
+}
+
+export function completeLevel(id: string): boolean {
+  const levels = getLevels();
+  const entry = levels.find((l) => l.id === id);
+  if (!entry || entry.completed) return false;
+  entry.completed = true;
+  saveLevels(levels);
+  for (const fn of completionListeners) fn(id, entry.name);
+  return true;
 }
 
 export const state: GameState = {

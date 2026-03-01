@@ -1,5 +1,5 @@
 import { Container } from "pixi.js";
-import { state } from "../state";
+import { state, completeLevel } from "../state";
 import { coordKey, getNeighborKeys, parseKey } from "../hex/hexUtils";
 import { hexToPixel } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
@@ -91,6 +91,12 @@ export function setupWalkInput(
       const pos = parseKey(bestKey);
       state.characterPos = { q: pos.q, r: pos.r };
       renderAll();
+
+      // Check if we stepped on a flag tile
+      const tile = state.tiles.get(bestKey);
+      if (tile && tile.kind === "flag") {
+        completeLevel(state.currentLevel);
+      }
     }
   });
 }

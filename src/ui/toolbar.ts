@@ -11,7 +11,7 @@ export function setupToolbar(): void {
     { label: "Build", mode: "build" },
     { label: "Bridge", mode: "bridge" },
     { label: "Delete", mode: "delete" },
-    { label: "Walk", mode: "walk" },
+    { label: "Play", mode: "walk" },
   ];
 
   const buttons: HTMLButtonElement[] = [];
