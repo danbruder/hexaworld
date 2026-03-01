@@ -116,6 +116,15 @@ export function createLevel(): string {
   return nextId;
 }
 
+export function renameLevel(id: string, name: string): void {
+  const levels = getLevels();
+  const entry = levels.find((l) => l.id === id);
+  if (entry) {
+    entry.name = name;
+    saveLevels(levels);
+  }
+}
+
 export function deleteLevel(id: string): boolean {
   const levels = getLevels();
   if (levels.length <= 1) return false;
