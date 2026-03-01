@@ -32,8 +32,8 @@ export function setupDeleteInput(
     const { q, r } = pixelToHex(worldX, worldY);
     const key = coordKey(q, r);
 
-    // Try deleting a tile
-    if (state.tiles.has(key)) {
+    // Try deleting a tile (but don't delete the last one)
+    if (state.tiles.has(key) && state.tiles.size > 1) {
       state.tiles.delete(key);
       // Also remove any bridges connected to this tile
       state.bridges = state.bridges.filter(
