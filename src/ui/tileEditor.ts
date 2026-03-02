@@ -141,7 +141,19 @@ function buildPanel(effects: TileEffects, titleText: string): void {
   killGroup.appendChild(toggleLabel);
   panel.appendChild(killGroup);
 
-  document.body.appendChild(panel);
+  // Append inside kind-picker if available, otherwise body
+  const kindPicker = document.getElementById("kind-picker");
+  if (kindPicker) {
+    // Insert before the toggle button (last child)
+    const toggle = kindPicker.querySelector(".kind-toggle");
+    if (toggle) {
+      kindPicker.insertBefore(panel, toggle);
+    } else {
+      kindPicker.appendChild(panel);
+    }
+  } else {
+    document.body.appendChild(panel);
+  }
 }
 
 function applyEffect(key: string, value: number | boolean): void {
