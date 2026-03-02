@@ -1,8 +1,10 @@
-import { state, clearState, saveState } from "../state";
+import { state, clearState, saveState, exportLevels, importLevels } from "../state";
 import { Mode } from "../types";
 import { renderAll } from "../render/renderer";
 import { coordKey } from "../hex/hexUtils";
 import { COLORS } from "../constants";
+import { closeTileEditor, showTemplateEditor } from "./tileEditor";
+import { updateHpBar } from "./hpBar";
 
 type ModeListener = (mode: Mode) => void;
 const modeListeners: ModeListener[] = [];
@@ -14,11 +16,27 @@ export function onModeChange(fn: ModeListener): void {
 function setMode(mode: Mode): void {
   state.mode = mode;
   state.bridgeStart = null;
+  state.movementAnim = null;
+
+  // Show tile editor in build mode, close in other modes
+  if (mode === "build") {
+    showTemplateEditor();
+  } else {
+    closeTileEditor();
+  }
 
   if (mode === "walk" && !state.characterPos && state.tiles.size > 0) {
     const firstTile = state.tiles.values().next().value!;
     state.characterPos = { q: firstTile.q, r: firstTile.r };
   }
+
+  // Set/reset HP when entering/leaving walk mode
+  if (mode === "walk") {
+    state.currentHp = state.startingHp;
+  } else {
+    state.currentHp = null;
+  }
+  updateHpBar();
 
   renderAll();
   for (const fn of modeListeners) fn(mode);
@@ -81,6 +99,41 @@ export function setupToolbar(): void {
     renderAll();
   });
   subTools.appendChild(clearBtn);
+
+  const exportBtn = document.createElement("button");
+  exportBtn.textContent = "Export";
+  exportBtn.addEventListener("click", () => {
+    exportLevels();
+  });
+  subTools.appendChild(exportBtn);
+
+  const importBtn = document.createElement("button");
+  importBtn.textContent = "Import";
+  importBtn.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.style.display = "none";
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      file.text().then((text) => {
+        try {
+          const count = importLevels(text);
+          // Dynamically import to avoid circular dependency
+          import("./levelSelector").then((m) => m.rerenderLevelSelector());
+          renderAll();
+          alert(`Imported ${count} level${count !== 1 ? "s" : ""}.`);
+        } catch (e) {
+          alert(`Import failed: ${(e as Error).message}`);
+        }
+      });
+      input.remove();
+    });
+    document.body.appendChild(input);
+    input.click();
+  });
+  subTools.appendChild(importBtn);
 
   function updateActive() {
     const isPlay = state.mode === "walk";

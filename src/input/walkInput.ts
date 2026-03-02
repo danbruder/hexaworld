@@ -1,9 +1,8 @@
 import { Container } from "pixi.js";
-import { state, completeLevel } from "../state";
+import { state } from "../state";
 import { coordKey, getNeighborKeys, parseKey } from "../hex/hexUtils";
 import { hexToPixel } from "../hex/hexUtils";
-import { renderAll } from "../render/renderer";
-import { showOverlay } from "../ui/overlay";
+import { renderAll, getCharacterVisualPos } from "../render/renderer";
 
 let worldContainer: Container;
 let canvasWidth = 0;
@@ -19,6 +18,9 @@ export function setupWalkInput(
 
   window.addEventListener("keydown", (e) => {
     if (state.mode !== "walk" || !state.characterPos) return;
+
+    // Block input while animating
+    if (state.movementAnim) return;
 
     const { q, r } = state.characterPos;
     const currentKey = coordKey(q, r);
@@ -90,38 +92,37 @@ export function setupWalkInput(
 
     if (bestKey) {
       const pos = parseKey(bestKey);
-      state.characterPos = { q: pos.q, r: pos.r };
-      renderAll();
+      const destTile = state.tiles.get(bestKey);
+      const duration = destTile?.effects?.speed ?? 0.15;
 
-      // Check tile effects
-      const tile = state.tiles.get(bestKey);
-      if (tile && tile.kind === "flag") {
-        completeLevel(state.currentLevel);
-      } else if (tile && tile.kind === "skull") {
-        showOverlay({
-          className: "overlay-death",
-          title: "You Died!",
-          topDecor: "&#128128;",
-          bottomDecor: "&#128128; &#128128; &#128128;",
-          duration: 2000,
-        });
-        // Respawn at seed tile (0,0)
-        state.characterPos = { q: 0, r: 0 };
-        renderAll();
-      }
+      // Start movement animation
+      state.movementAnim = {
+        fromQ: q,
+        fromR: r,
+        toQ: pos.q,
+        toR: pos.r,
+        progress: 0,
+        duration,
+      };
+
+      // Set logical position to destination immediately
+      state.characterPos = { q: pos.q, r: pos.r };
+      // Don't call renderAll — the animation loop handles visuals
     }
   });
 }
 
-/** Lerp camera to center on character */
+/** Lerp camera to center on character (tracks interpolated position during animation) */
 export function updateCamera(): void {
   if (state.mode !== "walk" || !state.characterPos) return;
 
-  const target = hexToPixel(state.characterPos.q, state.characterPos.r);
+  const visualPos = getCharacterVisualPos();
+  if (!visualPos) return;
+
   const scale = worldContainer.scale.x;
 
-  const targetX = canvasWidth / 2 - target.x * scale;
-  const targetY = canvasHeight / 2 - target.y * scale;
+  const targetX = canvasWidth / 2 - visualPos.x * scale;
+  const targetY = canvasHeight / 2 - visualPos.y * scale;
 
   worldContainer.x += (targetX - worldContainer.x) * 0.08;
   worldContainer.y += (targetY - worldContainer.y) * 0.08;

@@ -1,8 +1,9 @@
-import { state, getLevels, switchLevel, createLevel, deleteLevel, renameLevel, saveState, onLevelComplete } from "../state";
+import { state, getLevels, switchLevel, createLevel, deleteLevel, renameLevel, saveState, onLevelComplete, updateLevelHp } from "../state";
 import { renderAll } from "../render/renderer";
 import { COLORS } from "../constants";
 import { coordKey } from "../hex/hexUtils";
 import { showOverlay } from "./overlay";
+import { onModeChange } from "./toolbar";
 
 export function setupLevelSelector(): void {
   const container = document.getElementById("level-selector")!;
@@ -72,6 +73,25 @@ export function setupLevelSelector(): void {
 
       tab.appendChild(nameBtn);
 
+      // HP input for active level in build mode
+      if (level.id === state.currentLevel && state.mode !== "walk") {
+        const hpInput = document.createElement("input");
+        hpInput.className = "level-hp-input";
+        hpInput.type = "number";
+        hpInput.min = "1";
+        hpInput.max = "9999";
+        hpInput.value = String(level.startingHp ?? 100);
+        hpInput.title = "Starting HP";
+        hpInput.addEventListener("change", () => {
+          const hp = Math.max(1, parseInt(hpInput.value) || 100);
+          hpInput.value = String(hp);
+          updateLevelHp(level.id, hp);
+          state.startingHp = hp;
+        });
+        hpInput.addEventListener("click", (e) => e.stopPropagation());
+        tab.appendChild(hpInput);
+      }
+
       // Delete button (only if more than one level)
       if (levels.length > 1) {
         const delBtn = document.createElement("button");
@@ -110,6 +130,9 @@ export function setupLevelSelector(): void {
     container.appendChild(addBtn);
   }
 
+  // Re-render on mode change (to show/hide HP input)
+  onModeChange(() => render());
+
   // Listen for level completions
   onLevelComplete((_id, name) => {
     showOverlay({
@@ -123,4 +146,13 @@ export function setupLevelSelector(): void {
   });
 
   render();
+
+  // Expose refresh for external callers (e.g. import)
+  refreshLevelSelector = render;
+}
+
+let refreshLevelSelector: (() => void) | null = null;
+
+export function rerenderLevelSelector(): void {
+  if (refreshLevelSelector) refreshLevelSelector();
 }

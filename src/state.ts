@@ -12,6 +12,7 @@ export interface LevelEntry {
   id: string;
   name: string;
   completed?: boolean;
+  startingHp?: number;
 }
 
 // Listeners for level completion events
@@ -42,6 +43,9 @@ export const state: GameState = {
   bridgeStart: null,
   currentLevel: "1",
   selectedCharacter: "robot",
+  movementAnim: null,
+  startingHp: 100,
+  currentHp: null,
 };
 
 export function getLevels(): LevelEntry[] {
@@ -54,8 +58,17 @@ export function getLevels(): LevelEntry[] {
   }
 }
 
-function saveLevels(levels: LevelEntry[]): void {
+export function saveLevels(levels: LevelEntry[]): void {
   localStorage.setItem(LEVELS_KEY, JSON.stringify(levels));
+}
+
+export function updateLevelHp(id: string, hp: number): void {
+  const levels = getLevels();
+  const entry = levels.find((l) => l.id === id);
+  if (entry) {
+    entry.startingHp = hp;
+    saveLevels(levels);
+  }
 }
 
 export function saveState(): void {
@@ -100,6 +113,10 @@ export function loadPrefs(): void {
     if (typeof data.selectedKind === "string") state.selectedKind = data.selectedKind;
     if (typeof data.currentLevel === "string") state.currentLevel = data.currentLevel;
     if (typeof data.selectedCharacter === "string") state.selectedCharacter = data.selectedCharacter;
+    // Load starting HP for current level
+    const levels = getLevels();
+    const entry = levels.find((l) => l.id === state.currentLevel);
+    if (entry?.startingHp) state.startingHp = entry.startingHp;
   } catch {
     // Ignore
   }
@@ -124,6 +141,12 @@ export function switchLevel(id: string): void {
   state.bridges = [];
   state.characterPos = null;
   state.bridgeStart = null;
+  state.movementAnim = null;
+  state.currentHp = null;
+  // Load starting HP from level entry
+  const levels = getLevels();
+  const entry = levels.find((l) => l.id === id);
+  state.startingHp = entry?.startingHp ?? 100;
   // Load new level
   loadState();
   savePrefs();
@@ -170,4 +193,66 @@ export function clearState(): void {
   state.characterPos = null;
   state.bridgeStart = null;
   localStorage.removeItem(levelStorageKey(state.currentLevel));
+}
+
+export function exportLevels(): void {
+  saveState();
+  const levels = getLevels();
+  const exportData = {
+    hexaworld: 1,
+    levels: levels.map((entry) => {
+      const raw = localStorage.getItem(levelStorageKey(entry.id));
+      let tiles: [string, TileData][] = [];
+      let bridges: BridgeData[] = [];
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          tiles = data.tiles ?? [];
+          bridges = data.bridges ?? [];
+        } catch { /* skip corrupt */ }
+      }
+      return {
+        name: entry.name,
+        startingHp: entry.startingHp ?? 100,
+        tiles,
+        bridges,
+      };
+    }),
+  };
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "hexaworld-export.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function importLevels(json: string): number {
+  const parsed = JSON.parse(json);
+  if (!parsed.hexaworld || !Array.isArray(parsed.levels)) {
+    throw new Error("Invalid HexaWorld export file");
+  }
+  const levels = getLevels();
+  let firstNewId: string | null = null;
+  for (const lvl of parsed.levels) {
+    const nextId = String(Math.max(...levels.map((l) => Number(l.id) || 0), 0) + 1);
+    localStorage.removeItem(levelStorageKey(nextId));
+    levels.push({
+      id: nextId,
+      name: lvl.name ?? `Level ${nextId}`,
+      startingHp: lvl.startingHp ?? 100,
+    });
+    saveLevels(levels);
+    const levelData = {
+      tiles: lvl.tiles ?? [],
+      bridges: lvl.bridges ?? [],
+    };
+    localStorage.setItem(levelStorageKey(nextId), JSON.stringify(levelData));
+    if (!firstNewId) firstNewId = nextId;
+  }
+  if (firstNewId) {
+    switchLevel(firstNewId);
+  }
+  return parsed.levels.length;
 }

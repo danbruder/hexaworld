@@ -5,6 +5,7 @@ import { drawHex } from "./drawHex";
 import { drawGhost } from "./drawGhost";
 import { drawBridge } from "./drawBridge";
 import { TILE_KINDS, PLAYER_CHARACTERS } from "../constants";
+import { onTileArrival } from "../game/tileEffects";
 
 let tileGraphics: Graphics;
 let ghostGraphics: Graphics;
@@ -17,6 +18,7 @@ let kindContainer: Container;
 const kindIconStyle = new TextStyle({
   fontSize: 24,
   align: "center",
+  fontFamily: "Fredoka",
 });
 
 // Pool of text objects for kind icons
@@ -25,6 +27,7 @@ const kindTexts: Text[] = [];
 const characterStyle = new TextStyle({
   fontSize: 36,
   align: "center",
+  fontFamily: "Fredoka",
 });
 
 let characterBaseY = 0;
@@ -127,8 +130,8 @@ export function renderAll(): void {
     highlightGraphics.alpha = 0;
   }
 
-  // Character
-  if (state.characterPos) {
+  // Character — skip snap if animating
+  if (state.characterPos && !state.movementAnim) {
     const charDef = PLAYER_CHARACTERS.find((c) => c.id === state.selectedCharacter);
     const center = hexToPixel(state.characterPos.q, state.characterPos.r);
     characterText.text = charDef?.icon ?? PLAYER_CHARACTERS[0].icon;
@@ -136,9 +139,65 @@ export function renderAll(): void {
     characterBaseY = center.y;
     characterText.y = characterBaseY;
     characterContainer.visible = true;
-  } else {
+  } else if (!state.characterPos) {
     characterContainer.visible = false;
   }
+}
+
+/** Ease-out cubic */
+function easeOut(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+/** Advance movement animation; call each frame with dt in seconds */
+export function updateMovement(dt: number): void {
+  const anim = state.movementAnim;
+  if (!anim) return;
+
+  anim.progress += dt / anim.duration;
+
+  const fromPixel = hexToPixel(anim.fromQ, anim.fromR);
+  const toPixel = hexToPixel(anim.toQ, anim.toR);
+
+  if (anim.progress >= 1) {
+    // Animation complete — snap to destination
+    characterText.x = toPixel.x;
+    characterBaseY = toPixel.y;
+    characterText.y = characterBaseY;
+    characterContainer.visible = true;
+    state.movementAnim = null;
+
+    // Trigger tile arrival effects
+    onTileArrival(anim.toQ, anim.toR);
+  } else {
+    const t = easeOut(anim.progress);
+    characterText.x = fromPixel.x + (toPixel.x - fromPixel.x) * t;
+    characterBaseY = fromPixel.y + (toPixel.y - fromPixel.y) * t;
+    characterText.y = characterBaseY;
+    characterContainer.visible = true;
+
+    // Update character icon
+    const charDef = PLAYER_CHARACTERS.find((c) => c.id === state.selectedCharacter);
+    characterText.text = charDef?.icon ?? PLAYER_CHARACTERS[0].icon;
+  }
+}
+
+/** Get current visual position of character (for camera tracking during animation) */
+export function getCharacterVisualPos(): { x: number; y: number } | null {
+  if (!state.characterPos) return null;
+
+  const anim = state.movementAnim;
+  if (anim) {
+    const fromPixel = hexToPixel(anim.fromQ, anim.fromR);
+    const toPixel = hexToPixel(anim.toQ, anim.toR);
+    const t = easeOut(anim.progress);
+    return {
+      x: fromPixel.x + (toPixel.x - fromPixel.x) * t,
+      y: fromPixel.y + (toPixel.y - fromPixel.y) * t,
+    };
+  }
+
+  return hexToPixel(state.characterPos.q, state.characterPos.r);
 }
 
 /** Call each frame to animate the idle bob */

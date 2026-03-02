@@ -3,6 +3,7 @@ import { state, saveState } from "../state";
 import { pixelToHex, coordKey, getGhostPositions } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
 import { blockPan } from "./panZoom";
+import { editTile, backToTemplate, getTemplateEffects } from "../ui/tileEditor";
 
 export function setupBuildInput(
   worldContainer: Container,
@@ -26,7 +27,9 @@ export function setupBuildInput(
     const ghosts = getGhostPositions();
     if (!ghosts.includes(key)) return false;
     const [q, r] = key.split(",").map(Number);
-    state.tiles.set(key, { q, r, color: state.selectedColor, kind: state.selectedKind });
+    const effects = getTemplateEffects();
+    const tile = { q, r, color: state.selectedColor, kind: state.selectedKind, ...(Object.keys(effects).length > 0 ? { effects } : {}) };
+    state.tiles.set(key, tile);
     return true;
   }
 
@@ -35,6 +38,17 @@ export function setupBuildInput(
 
     const key = screenToHexKey(e.clientX, e.clientY);
     if (!key) return;
+
+    // Check if clicking on an existing tile → edit its effects
+    if (state.tiles.has(key)) {
+      const tile = state.tiles.get(key)!;
+      blockPan();
+      editTile(tile);
+      return;
+    }
+
+    // Clicking on a ghost → switch back to template mode + paint
+    backToTemplate();
 
     // Check if we're clicking on a ghost — if so, start painting
     const ghosts = getGhostPositions();

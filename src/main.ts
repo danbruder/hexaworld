@@ -2,12 +2,13 @@ import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
 import { state, loadState, loadPrefs, migrateOldSave } from "./state";
 import { coordKey } from "./hex/hexUtils";
-import { initRenderer, renderAll, updateCharacterBob } from "./render/renderer";
+import { initRenderer, renderAll, updateCharacterBob, updateMovement } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
 import { updateCamera, onResize } from "./input/walkInput";
 import { setupToolbar } from "./ui/toolbar";
 import { setupKindPicker } from "./ui/kindPicker";
 import { setupLevelSelector } from "./ui/levelSelector";
+import { setupHpBar } from "./ui/hpBar";
 
 async function main() {
   const app = new Application();
@@ -57,9 +58,12 @@ async function main() {
   setupToolbar();
   setupLevelSelector();
   setupKindPicker();
+  setupHpBar();
 
-  // Game loop — just for camera follow in walk mode
+  // Game loop — camera follow + movement animation
   app.ticker.add(() => {
+    const dt = app.ticker.deltaMS / 1000;
+    updateMovement(dt);
     updateCamera();
     updateCharacterBob();
   });
