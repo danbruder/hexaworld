@@ -14,6 +14,12 @@ export function setupKindPicker(): void {
   function renderTilePicker() {
     container.innerHTML = "";
 
+    // Header
+    const header = document.createElement("div");
+    header.className = "kind-header";
+    header.textContent = "Tiles";
+    container.appendChild(header);
+
     // Scrollable grid
     const list = document.createElement("div");
     list.className = "kind-list";
@@ -22,7 +28,7 @@ export function setupKindPicker(): void {
     // Toggle button at bottom
     const toggle = document.createElement("button");
     toggle.className = "kind-toggle";
-    toggle.textContent = "\u25BC Tiles";
+    toggle.textContent = "\u25BC Collapse";
     container.appendChild(toggle);
 
     const buttons: HTMLButtonElement[] = [];
@@ -97,7 +103,7 @@ export function setupKindPicker(): void {
     toggle.addEventListener("click", () => {
       collapsed = !collapsed;
       container.classList.toggle("collapsed", collapsed);
-      toggle.textContent = collapsed ? "\u25B2 Tiles" : "\u25BC Tiles";
+      toggle.textContent = collapsed ? "\u25B2 Expand" : "\u25BC Collapse";
     });
 
     function updateActive() {
@@ -113,13 +119,18 @@ export function setupKindPicker(): void {
   function renderPlayerPicker() {
     container.innerHTML = "";
 
+    const header = document.createElement("div");
+    header.className = "kind-header";
+    header.textContent = "Player";
+    container.appendChild(header);
+
     const list = document.createElement("div");
     list.className = "kind-list";
     container.appendChild(list);
 
     const toggle = document.createElement("button");
     toggle.className = "kind-toggle";
-    toggle.textContent = "\u25BC Player";
+    toggle.textContent = "\u25BC Collapse";
     container.appendChild(toggle);
 
     const buttons: HTMLButtonElement[] = [];
@@ -145,7 +156,7 @@ export function setupKindPicker(): void {
     toggle.addEventListener("click", () => {
       collapsed = !collapsed;
       container.classList.toggle("collapsed", collapsed);
-      toggle.textContent = collapsed ? "\u25B2 Player" : "\u25BC Player";
+      toggle.textContent = collapsed ? "\u25B2 Expand" : "\u25BC Collapse";
     });
 
     function updateActive() {

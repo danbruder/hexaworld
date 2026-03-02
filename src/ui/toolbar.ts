@@ -47,7 +47,7 @@ export function setupToolbar(): void {
 
   // Top-level: Build | Play
   const buildBtn = document.createElement("button");
-  buildBtn.textContent = "Build";
+  buildBtn.innerHTML = "\u270F\uFE0F Build";
   buildBtn.addEventListener("click", () => {
     setMode("build");
     updateActive();
@@ -55,7 +55,7 @@ export function setupToolbar(): void {
   container.appendChild(buildBtn);
 
   const playBtn = document.createElement("button");
-  playBtn.textContent = "Play";
+  playBtn.innerHTML = "\u25B6 Play";
   playBtn.addEventListener("click", () => {
     setMode("walk");
     updateActive();
@@ -73,7 +73,7 @@ export function setupToolbar(): void {
   container.appendChild(subTools);
 
   const bridgeBtn = document.createElement("button");
-  bridgeBtn.textContent = "Bridge";
+  bridgeBtn.innerHTML = "\u{1F309} Bridge";
   bridgeBtn.addEventListener("click", () => {
     setMode("bridge");
     updateActive();
@@ -81,7 +81,7 @@ export function setupToolbar(): void {
   subTools.appendChild(bridgeBtn);
 
   const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete";
+  deleteBtn.innerHTML = "\u{1F5D1}\uFE0F Delete";
   deleteBtn.addEventListener("click", () => {
     setMode("delete");
     updateActive();
@@ -89,7 +89,7 @@ export function setupToolbar(): void {
   subTools.appendChild(deleteBtn);
 
   const clearBtn = document.createElement("button");
-  clearBtn.textContent = "Clear";
+  clearBtn.innerHTML = "\u{1F4A5} Clear";
   clearBtn.style.color = "#e55";
   clearBtn.addEventListener("click", () => {
     if (!confirm("Clear everything and start over?")) return;
@@ -100,16 +100,33 @@ export function setupToolbar(): void {
   });
   subTools.appendChild(clearBtn);
 
+  // Menu button with dropdown for Export/Import
+  const menuWrap = document.createElement("div");
+  menuWrap.className = "toolbar-menu-wrap";
+  subTools.appendChild(menuWrap);
+
+  const menuBtn = document.createElement("button");
+  menuBtn.textContent = "\u2699";
+  menuBtn.title = "More options";
+  menuBtn.className = "toolbar-menu-btn";
+  menuWrap.appendChild(menuBtn);
+
+  const menuDropdown = document.createElement("div");
+  menuDropdown.className = "toolbar-dropdown";
+  menuWrap.appendChild(menuDropdown);
+
   const exportBtn = document.createElement("button");
   exportBtn.textContent = "Export";
   exportBtn.addEventListener("click", () => {
     exportLevels();
+    menuDropdown.classList.remove("open");
   });
-  subTools.appendChild(exportBtn);
+  menuDropdown.appendChild(exportBtn);
 
   const importBtn = document.createElement("button");
   importBtn.textContent = "Import";
   importBtn.addEventListener("click", () => {
+    menuDropdown.classList.remove("open");
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
@@ -120,7 +137,6 @@ export function setupToolbar(): void {
       file.text().then((text) => {
         try {
           const count = importLevels(text);
-          // Dynamically import to avoid circular dependency
           import("./levelSelector").then((m) => m.rerenderLevelSelector());
           document.getElementById("world-title")!.textContent = getWorldName();
           renderAll();
@@ -134,7 +150,25 @@ export function setupToolbar(): void {
     document.body.appendChild(input);
     input.click();
   });
-  subTools.appendChild(importBtn);
+  menuDropdown.appendChild(importBtn);
+
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menuDropdown.classList.toggle("open");
+  });
+  document.addEventListener("click", () => {
+    menuDropdown.classList.remove("open");
+  });
+
+  // Floating back button for play mode
+  const backBtn = document.createElement("button");
+  backBtn.id = "play-back-btn";
+  backBtn.textContent = "\u2190 Build";
+  backBtn.addEventListener("click", () => {
+    setMode("build");
+    updateActive();
+  });
+  document.body.appendChild(backBtn);
 
   function updateActive() {
     const isPlay = state.mode === "walk";
@@ -145,6 +179,16 @@ export function setupToolbar(): void {
     // Sub-tool highlights
     bridgeBtn.classList.toggle("active", state.mode === "bridge");
     deleteBtn.classList.toggle("active", state.mode === "delete");
+
+    // Hide/show build UI panels in play mode
+    container.style.display = isPlay ? "none" : "flex";
+    backBtn.style.display = isPlay ? "block" : "none";
+    const kindPicker = document.getElementById("kind-picker");
+    const levelSelector = document.getElementById("level-selector");
+    const worldTitle = document.getElementById("world-title");
+    if (kindPicker) kindPicker.style.display = isPlay ? "none" : "flex";
+    if (levelSelector) levelSelector.style.display = isPlay ? "none" : "flex";
+    if (worldTitle) worldTitle.style.display = isPlay ? "none" : "block";
   }
 
   updateActive();

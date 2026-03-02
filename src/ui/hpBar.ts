@@ -37,5 +37,8 @@ export function updateHpBar(): void {
   else if (pct > 25) barFill.style.background = "#c9a030";
   else barFill.style.background = "#d4534a";
 
-  barLabel.textContent = `${Math.ceil(state.currentHp)} / ${state.startingHp}`;
+  // Pulse animation at low HP
+  barContainer.classList.toggle("hp-low", pct <= 25 && pct > 0);
+
+  barLabel.textContent = `\u2764\uFE0F ${Math.ceil(state.currentHp)} / ${state.startingHp}`;
 }

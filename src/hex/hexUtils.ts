@@ -39,7 +39,7 @@ export function getNeighborKeys(q: number, r: number): string[] {
 }
 
 /** Return keys of empty positions within `depth` steps of any existing tile */
-export function getGhostPositions(depth: number = 3): string[] {
+export function getGhostPositions(depth: number = 2): string[] {
   const ghosts = new Set<string>();
   // BFS frontier: start from all existing tiles
   let frontier = new Set<string>();
@@ -62,6 +62,31 @@ export function getGhostPositions(depth: number = 3): string[] {
   }
 
   return Array.from(ghosts);
+}
+
+/** Returns ghost positions with their BFS depth (1 = adjacent to a tile, 2 = one step further) */
+export function getGhostPositionsWithDepth(maxDepth: number = 2): Map<string, number> {
+  const ghosts = new Map<string, number>();
+  let frontier = new Set<string>();
+  for (const key of state.tiles.keys()) {
+    frontier.add(key);
+  }
+
+  for (let d = 1; d <= maxDepth; d++) {
+    const nextFrontier = new Set<string>();
+    for (const key of frontier) {
+      const { q, r } = parseKey(key);
+      for (const nk of getNeighborKeys(q, r)) {
+        if (!state.tiles.has(nk) && !ghosts.has(nk)) {
+          ghosts.set(nk, d);
+          nextFrontier.add(nk);
+        }
+      }
+    }
+    frontier = nextFrontier;
+  }
+
+  return ghosts;
 }
 
 /** Convert world-space pixel position to hex axial coords */

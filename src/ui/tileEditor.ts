@@ -20,7 +20,7 @@ export function getTemplateEffects(): TileEffects {
 /** Show the editor in template mode (for configuring the next tile to place) */
 export function showTemplateEditor(): void {
   currentTileKey = null;
-  buildPanel(templateEffects, "New Tile Effects");
+  buildPanel(templateEffects, "Tile Properties");
 }
 
 /** Show the editor in edit mode for an existing tile */
@@ -120,19 +120,25 @@ function buildPanel(effects: TileEffects, titleText: string): void {
   dmgGroup.appendChild(dmgInput);
   panel.appendChild(dmgGroup);
 
-  // Instant kill checkbox
+  // Instant kill toggle
   const killGroup = document.createElement("div");
   killGroup.className = "tile-editor-group tile-editor-check";
   const killLabel = document.createElement("label");
   killLabel.textContent = "Instant Kill";
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "toggle-switch";
   const killInput = document.createElement("input");
   killInput.type = "checkbox";
   killInput.checked = effects.instantKill ?? false;
   killInput.addEventListener("change", () => {
     applyEffect("instantKill", killInput.checked);
   });
+  const toggleSlider = document.createElement("span");
+  toggleSlider.className = "toggle-slider";
+  toggleLabel.appendChild(killInput);
+  toggleLabel.appendChild(toggleSlider);
   killGroup.appendChild(killLabel);
-  killGroup.appendChild(killInput);
+  killGroup.appendChild(toggleLabel);
   panel.appendChild(killGroup);
 
   document.body.appendChild(panel);

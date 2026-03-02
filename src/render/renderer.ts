@@ -1,6 +1,6 @@
 import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import { state } from "../state";
-import { getGhostPositions, parseKey, hexToPixel } from "../hex/hexUtils";
+import { getGhostPositionsWithDepth, parseKey, hexToPixel } from "../hex/hexUtils";
 import { drawHex } from "./drawHex";
 import { drawGhost } from "./drawGhost";
 import { drawBridge } from "./drawBridge";
@@ -105,10 +105,11 @@ export function renderAll(): void {
   // Ghosts (only in build mode)
   ghostGraphics.clear();
   if (state.mode === "build") {
-    const ghosts = getGhostPositions();
-    for (const key of ghosts) {
+    const ghosts = getGhostPositionsWithDepth(2);
+    for (const [key, depth] of ghosts) {
       const { q, r } = parseKey(key);
-      drawGhost(ghostGraphics, q, r);
+      const alpha = depth === 1 ? 0.4 : 0.15;
+      drawGhost(ghostGraphics, q, r, alpha);
     }
   }
 
