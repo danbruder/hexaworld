@@ -3,6 +3,7 @@ import { GameState, TileData, BridgeData } from "./types";
 
 const LEVELS_KEY = "hexaworld-levels";
 const PREFS_KEY = "hexaworld-prefs";
+const WORLD_NAME_KEY = "hexaworld-world-name";
 
 function levelStorageKey(id: string): string {
   return `hexaworld-level-${id}`;
@@ -187,6 +188,14 @@ export function deleteLevel(id: string): boolean {
   return true;
 }
 
+export function getWorldName(): string {
+  return localStorage.getItem(WORLD_NAME_KEY) || "My World";
+}
+
+export function setWorldName(name: string): void {
+  localStorage.setItem(WORLD_NAME_KEY, name);
+}
+
 export function clearState(): void {
   state.tiles.clear();
   state.bridges = [];
@@ -200,6 +209,7 @@ export function exportLevels(): void {
   const levels = getLevels();
   const exportData = {
     hexaworld: 1,
+    name: getWorldName(),
     levels: levels.map((entry) => {
       const raw = localStorage.getItem(levelStorageKey(entry.id));
       let tiles: [string, TileData][] = [];
@@ -232,6 +242,9 @@ export function importLevels(json: string): number {
   const parsed = JSON.parse(json);
   if (!parsed.hexaworld || !Array.isArray(parsed.levels)) {
     throw new Error("Invalid HexaWorld export file");
+  }
+  if (parsed.name) {
+    setWorldName(parsed.name);
   }
   const levels = getLevels();
   let firstNewId: string | null = null;

@@ -1,12 +1,46 @@
 import { Container } from "pixi.js";
 import { state } from "../state";
-import { coordKey, getNeighborKeys, parseKey } from "../hex/hexUtils";
+import { coordKey, getNeighborKeys, parseKey, pixelToHex } from "../hex/hexUtils";
 import { hexToPixel } from "../hex/hexUtils";
 import { renderAll, getCharacterVisualPos } from "../render/renderer";
 
 let worldContainer: Container;
 let canvasWidth = 0;
 let canvasHeight = 0;
+
+function getReachable(): Set<string> {
+  if (!state.characterPos) return new Set();
+  const { q, r } = state.characterPos;
+  const currentKey = coordKey(q, r);
+  const reachable = new Set<string>();
+
+  for (const nk of getNeighborKeys(q, r)) {
+    if (state.tiles.has(nk)) reachable.add(nk);
+  }
+  for (const bridge of state.bridges) {
+    if (bridge.fromKey === currentKey) reachable.add(bridge.toKey);
+    if (bridge.toKey === currentKey) reachable.add(bridge.fromKey);
+  }
+  return reachable;
+}
+
+function moveToTile(targetKey: string): void {
+  if (!state.characterPos) return;
+  const { q, r } = state.characterPos;
+  const pos = parseKey(targetKey);
+  const destTile = state.tiles.get(targetKey);
+  const duration = destTile?.effects?.speed ?? 0.15;
+
+  state.movementAnim = {
+    fromQ: q,
+    fromR: r,
+    toQ: pos.q,
+    toR: pos.r,
+    progress: 0,
+    duration,
+  };
+  state.characterPos = { q: pos.q, r: pos.r };
+}
 
 export function setupWalkInput(
   wc: Container,
@@ -16,57 +50,24 @@ export function setupWalkInput(
   canvasWidth = canvas.width;
   canvasHeight = canvas.height;
 
+  // Keyboard movement
   window.addEventListener("keydown", (e) => {
     if (state.mode !== "walk" || !state.characterPos) return;
-
-    // Block input while animating
     if (state.movementAnim) return;
 
-    const { q, r } = state.characterPos;
-    const currentKey = coordKey(q, r);
-
-    // Get all reachable positions: adjacent tiles + bridge endpoints
-    const reachable = new Set<string>();
-
-    // Adjacent tiles
-    for (const nk of getNeighborKeys(q, r)) {
-      if (state.tiles.has(nk)) {
-        reachable.add(nk);
-      }
-    }
-
-    // Bridge endpoints
-    for (const bridge of state.bridges) {
-      if (bridge.fromKey === currentKey) reachable.add(bridge.toKey);
-      if (bridge.toKey === currentKey) reachable.add(bridge.fromKey);
-    }
-
+    const reachable = getReachable();
     if (reachable.size === 0) return;
 
-    // Find the reachable tile closest to the direction pressed
-    const currentPixel = hexToPixel(q, r);
+    const currentPixel = hexToPixel(state.characterPos.q, state.characterPos.r);
     let dirX = 0;
     let dirY = 0;
 
     switch (e.key) {
-      case "ArrowUp":
-      case "w":
-        dirY = -1;
-        break;
-      case "ArrowDown":
-      case "s":
-        dirY = 1;
-        break;
-      case "ArrowLeft":
-      case "a":
-        dirX = -1;
-        break;
-      case "ArrowRight":
-      case "d":
-        dirX = 1;
-        break;
-      default:
-        return;
+      case "ArrowUp": case "w": dirY = -1; break;
+      case "ArrowDown": case "s": dirY = 1; break;
+      case "ArrowLeft": case "a": dirX = -1; break;
+      case "ArrowRight": case "d": dirX = 1; break;
+      default: return;
     }
 
     e.preventDefault();
@@ -81,8 +82,6 @@ export function setupWalkInput(
       const dy = pixel.y - currentPixel.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist === 0) continue;
-
-      // Dot product with direction
       const score = (dx * dirX + dy * dirY) / dist;
       if (score > bestScore && score > 0.3) {
         bestScore = score;
@@ -90,24 +89,27 @@ export function setupWalkInput(
       }
     }
 
-    if (bestKey) {
-      const pos = parseKey(bestKey);
-      const destTile = state.tiles.get(bestKey);
-      const duration = destTile?.effects?.speed ?? 0.15;
+    if (bestKey) moveToTile(bestKey);
+  });
 
-      // Start movement animation
-      state.movementAnim = {
-        fromQ: q,
-        fromR: r,
-        toQ: pos.q,
-        toR: pos.r,
-        progress: 0,
-        duration,
-      };
+  // Tap-to-move
+  canvas.addEventListener("pointerup", (e) => {
+    if (state.mode !== "walk" || !state.characterPos) return;
+    if (state.movementAnim) return;
 
-      // Set logical position to destination immediately
-      state.characterPos = { q: pos.q, r: pos.r };
-      // Don't call renderAll — the animation loop handles visuals
+    const rect = canvas.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    const worldX = (screenX - worldContainer.x) / worldContainer.scale.x;
+    const worldY = (screenY - worldContainer.y) / worldContainer.scale.y;
+    const { q, r } = pixelToHex(worldX, worldY);
+    const tappedKey = coordKey(q, r);
+
+    if (!state.tiles.has(tappedKey)) return;
+
+    const reachable = getReachable();
+    if (reachable.has(tappedKey)) {
+      moveToTile(tappedKey);
     }
   });
 }

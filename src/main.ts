@@ -1,6 +1,6 @@
 import { Application, Container } from "pixi.js";
 import { BACKGROUND_COLOR, COLORS } from "./constants";
-import { state, loadState, loadPrefs, migrateOldSave } from "./state";
+import { state, loadState, loadPrefs, migrateOldSave, getWorldName, setWorldName } from "./state";
 import { coordKey } from "./hex/hexUtils";
 import { initRenderer, renderAll, updateCharacterBob, updateMovement } from "./render/renderer";
 import { setupInput } from "./input/inputHandler";
@@ -54,6 +54,9 @@ async function main() {
   // Setup input handlers
   setupInput(world, app.canvas as HTMLCanvasElement);
 
+  // Setup world title
+  setupWorldTitle();
+
   // Setup UI
   setupToolbar();
   setupLevelSelector();
@@ -73,6 +76,40 @@ async function main() {
     onResize(app.screen.width, app.screen.height);
   });
   onResize(app.screen.width, app.screen.height);
+}
+
+function setupWorldTitle(): void {
+  const el = document.getElementById("world-title")!;
+  el.textContent = getWorldName();
+
+  el.addEventListener("dblclick", () => {
+    const input = document.createElement("input");
+    input.className = "world-title-input";
+    input.value = getWorldName();
+    el.textContent = "";
+    el.appendChild(input);
+    input.focus();
+    input.select();
+
+    function commit() {
+      const trimmed = input.value.trim();
+      if (trimmed) {
+        setWorldName(trimmed);
+      }
+      el.textContent = getWorldName();
+    }
+
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      } else if (e.key === "Escape") {
+        input.removeEventListener("blur", commit);
+        el.textContent = getWorldName();
+      }
+    });
+  });
 }
 
 main();

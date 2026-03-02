@@ -1,4 +1,4 @@
-import { state, clearState, saveState, exportLevels, importLevels } from "../state";
+import { state, clearState, saveState, exportLevels, importLevels, getWorldName } from "../state";
 import { Mode } from "../types";
 import { renderAll } from "../render/renderer";
 import { coordKey } from "../hex/hexUtils";
@@ -122,6 +122,7 @@ export function setupToolbar(): void {
           const count = importLevels(text);
           // Dynamically import to avoid circular dependency
           import("./levelSelector").then((m) => m.rerenderLevelSelector());
+          document.getElementById("world-title")!.textContent = getWorldName();
           renderAll();
           alert(`Imported ${count} level${count !== 1 ? "s" : ""}.`);
         } catch (e) {

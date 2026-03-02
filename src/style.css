@@ -19,6 +19,33 @@ body {
   display: block;
 }
 
+/* World Title */
+#world-title {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 10;
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: default;
+  user-select: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+#world-title .world-title-input {
+  width: 260px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Fredoka', system-ui, sans-serif;
+  outline: none;
+}
+
 #toolbar {
   position: fixed;
   top: 12px;
@@ -423,8 +450,8 @@ body {
 /* HP Bar */
 #hp-bar {
   position: fixed;
-  top: 12px;
-  left: 12px;
+  top: 50px;
+  left: 16px;
   z-index: 10;
   width: 160px;
   height: 22px;
