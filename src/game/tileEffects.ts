@@ -3,6 +3,7 @@ import { coordKey } from "../hex/hexUtils";
 import { renderAll } from "../render/renderer";
 import { showOverlay } from "../ui/overlay";
 import { updateHpBar } from "../ui/hpBar";
+import { TILE_KINDS } from "../constants";
 
 export function onTileArrival(q: number, r: number): void {
   const key = coordKey(q, r);
@@ -21,12 +22,24 @@ export function onTileArrival(q: number, r: number): void {
     return;
   }
 
-  // Damage
-  if (tile.effects?.damage && state.currentHp !== null) {
-    state.currentHp = Math.max(0, state.currentHp - tile.effects.damage);
-    updateHpBar();
-    if (state.currentHp <= 0) {
-      triggerDeath();
+  // Determine damage: explicit effect overrides default, otherwise use kind default
+  if (state.currentHp !== null) {
+    const explicitDamage = tile.effects?.damage;
+    let damage: number;
+    if (explicitDamage !== undefined) {
+      damage = explicitDamage;
+    } else {
+      const kindDef = TILE_KINDS.find((k) => k.id === tile.kind);
+      damage = kindDef?.defaultDamage ?? 0;
+    }
+
+    if (damage !== 0) {
+      // Positive = damage, negative = healing (capped at startingHp)
+      state.currentHp = Math.max(0, Math.min(state.startingHp, state.currentHp - damage));
+      updateHpBar();
+      if (state.currentHp <= 0) {
+        triggerDeath();
+      }
     }
   }
 }
