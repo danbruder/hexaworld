@@ -3,6 +3,7 @@ import { state } from "../state";
 import { coordKey, getNeighborKeys, parseKey, pixelToHex } from "../hex/hexUtils";
 import { hexToPixel } from "../hex/hexUtils";
 import { renderAll, getCharacterVisualPos } from "../render/renderer";
+import { TILE_KINDS } from "../constants";
 
 let worldContainer: Container;
 let canvasWidth = 0;
@@ -29,7 +30,13 @@ function moveToTile(targetKey: string): void {
   const { q, r } = state.characterPos;
   const pos = parseKey(targetKey);
   const destTile = state.tiles.get(targetKey);
-  const duration = destTile?.effects?.speed ?? 0.15;
+  let duration: number;
+  if (destTile?.effects?.speed !== undefined) {
+    duration = destTile.effects.speed;
+  } else {
+    const kindDef = destTile ? TILE_KINDS.find((k) => k.id === destTile.kind) : null;
+    duration = kindDef?.defaultSpeed ?? 0.15;
+  }
 
   state.movementAnim = {
     fromQ: q,
